@@ -1,21 +1,6 @@
 import requests
 import pandas as pd
 
-def encontrar_maior_ano(x):
-    itens = []
-    anos = []
-    #Salvando os itens
-    for i in x:
-        itens.append({"Ano": i["year"], "Populacao" : i["value"]})
-    #Salvando os anos
-    for i in itens:
-        anos.append(i["Ano"])
-    #Procurando o item com maior ano
-    for i in itens:
-        if(i["Ano"] == max(anos)):
-            return i
-    return None
-
 #Finlandia cidades :
 corpo = {
     "limit" : 5,
@@ -28,16 +13,14 @@ resposta = requests.post("https://countriesnow.space/api/v0.1/countries/populati
 #Todos os dados: 
 dados = resposta.json()["data"]
 df = pd.DataFrame(dados)
-#Indexando o DF por Cidade
-df_indexado_cidade = df.set_index("city")
+#Instancia do resultado
+df_finlandia = None
+#Refatorando usando apenas o DataFrame inicial
+for indice,cidade,pais,popCount in df.itertuples():
+    #Uso de função anonima para encontrar o maior pela chave year da lista de dictionaries que popCount retorna
+    item_maior_ano = max(popCount, key=lambda chave : chave["year"])
+    df_auxiliar = pd.DataFrame([{"Cidade": cidade,"País" : pais, "Ano" : item_maior_ano["year"], "População" : item_maior_ano["value"]}])
+    df_finlandia = pd.concat([df_finlandia,df_auxiliar],ignore_index=True)
 
-df_novo = None
-
-#Valor de I será a Cidade por se tratar do Index
-for i,x in df_indexado_cidade.populationCounts.items():
-    maior_ano = encontrar_maior_ano(x)
-    if(maior_ano):
-        df_auxiliar = pd.DataFrame([{"Cidade": i, "Ano" : maior_ano["Ano"], "População" : maior_ano["Populacao"]}])
-        df_novo = pd.concat([df_novo,df_auxiliar],ignore_index=True)
-    
-print(df_novo)
+if df_finlandia is not None:
+    print(df_finlandia)
